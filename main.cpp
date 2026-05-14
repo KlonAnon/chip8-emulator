@@ -11,8 +11,9 @@ int main(int argc, char *argv[])
 {
   std::srand(static_cast<unsigned int>(std::time(nullptr)));
   Chip8 chip;
+  chip.reset();
   std::cout << "Chip8 Emulator Start\n";
-  chip.loadRom("games/Tetris.ch8");
+  chip.loadRom("games/Pong.ch8");
 
   SDL_Window *window = SDL_CreateWindow(
       "Chip-8 Emulator",
@@ -35,10 +36,16 @@ int main(int argc, char *argv[])
       {
         running = false;
       }
-      if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
+      if (event.type == SDL_KEYDOWN)
       {
-        running = false;
+        if (event.key.keysym.sym == SDLK_ESCAPE)
+        {
+          running = false;
+        }
+        mapKey(chip, event.key.keysym.sym, true);
       }
+      if (event.type == SDL_KEYUP)
+        mapKey(chip, event.key.keysym.sym, false);
     }
 
     chip.cycle();
@@ -74,4 +81,62 @@ int main(int argc, char *argv[])
   SDL_DestroyWindow(window);
   SDL_Quit();
   return 0;
+}
+
+void mapKey(Chip8 chip, SDL_Keycode keycode, bool keydown)
+{
+  switch (keycode)
+  {
+  case SDLK_1:
+    chip.keys[0x1] = keydown;
+    break;
+  case SDLK_2:
+    chip.keys[0x2] = keydown;
+    break;
+  case SDLK_3:
+    chip.keys[0x3] = keydown;
+    break;
+  case SDLK_4:
+    chip.keys[0xC] = keydown;
+    break;
+
+  case SDLK_q:
+    chip.keys[0x4] = keydown;
+    break;
+  case SDLK_w:
+    chip.keys[0x5] = keydown;
+    break;
+  case SDLK_e:
+    chip.keys[0x6] = keydown;
+    break;
+  case SDLK_r:
+    chip.keys[0xD] = keydown;
+    break;
+
+  case SDLK_a:
+    chip.keys[0x7] = keydown;
+    break;
+  case SDLK_s:
+    chip.keys[0x8] = keydown;
+    break;
+  case SDLK_d:
+    chip.keys[0x9] = keydown;
+    break;
+  case SDLK_f:
+    chip.keys[0xE] = keydown;
+    break;
+
+  case SDLK_z:
+    chip.keys[0xA] = keydown;
+    break;
+  case SDLK_x:
+    chip.keys[0x0] = keydown;
+    break;
+  case SDLK_c:
+    chip.keys[0xB] = keydown;
+    break;
+  case SDLK_v:
+    chip.keys[0xF] = keydown;
+    break;
+  }
 }
