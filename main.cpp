@@ -7,13 +7,19 @@ const int SCALE = 10;
 const int WIDTH = 64 * SCALE;
 const int HEIGHT = 32 * SCALE;
 
+const int TIMER_FREQ = 60;
+const int TIMER_INTERVAL = 1000 / TIMER_FREQ;
+const int CYCLES_PER_FRAME = 10;
+
+void mapKey(Chip8 &chip, SDL_Keycode keycode, bool keydown);
+
 int main(int argc, char *argv[])
 {
   std::srand(static_cast<unsigned int>(std::time(nullptr)));
   Chip8 chip;
   chip.reset();
   std::cout << "Chip8 Emulator Start\n";
-  chip.loadRom("games/Pong.ch8");
+  chip.loadRom("games/Tetris.ch8");
 
   SDL_Window *window = SDL_CreateWindow(
       "Chip-8 Emulator",
@@ -27,6 +33,8 @@ int main(int argc, char *argv[])
 
   bool running = true;
   SDL_Event event;
+
+  Uint32 lastTimerUpdate = SDL_GetTicks();
 
   while (running)
   {
@@ -48,7 +56,31 @@ int main(int argc, char *argv[])
         mapKey(chip, event.key.keysym.sym, false);
     }
 
-    chip.cycle();
+    for (int i = 0; i < CYCLES_PER_FRAME; i++)
+    {
+      chip.cycle();
+    }
+
+    Uint32 currentTime = SDL_GetTicks();
+    if (currentTime - lastTimerUpdate >= TIMER_INTERVAL)
+    {
+      if (chip.delayTimer > 0)
+      {
+        chip.delayTimer--;
+      }
+
+      if (chip.soundTimer > 0)
+      {
+        // keep sound alive
+        chip.soundTimer--;
+      }
+      else
+      {
+        // cancel sound
+      }
+
+      lastTimerUpdate = currentTime;
+    }
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -83,7 +115,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-void mapKey(Chip8 chip, SDL_Keycode keycode, bool keydown)
+void mapKey(Chip8 &chip, SDL_Keycode keycode, bool keydown)
 {
   switch (keycode)
   {

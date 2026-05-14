@@ -93,15 +93,15 @@ void Chip8::cycle()
         break;
     case 0x3000:
         if (V[x] == kk)
-            pc += 4;
+            pc += 2;
         break;
     case 0x4000:
         if (V[x] != kk)
-            pc += 4;
+            pc += 2;
         break;
     case 0x5000:
         if (V[x] == V[y])
-            pc += 4;
+            pc += 2;
         break;
     case 0x6000:
         V[x] = kk;
@@ -148,7 +148,7 @@ void Chip8::cycle()
         break;
     case 0x9000:
         if (V[x] != V[y])
-            pc += 4;
+            pc += 2;
         break;
     case 0xA000:
         I = nnn;
@@ -165,6 +165,7 @@ void Chip8::cycle()
     case 0xD000:
     {
         uint8_t n = opcode & 0x000F;
+        V[0xF] = 0;
         for (int row = 0; row < n; row++)
         {
             uint8_t spriteByte = memory[I + row];
@@ -192,11 +193,11 @@ void Chip8::cycle()
         {
         case 0x9E:
             if (keys[V[x]])
-                pc += 4;
+                pc += 2;
             break;
         case 0xA1:
             if (!keys[V[x]])
-                pc += 4;
+                pc += 2;
             break;
         }
         break;
