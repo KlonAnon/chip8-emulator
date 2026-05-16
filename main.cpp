@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ctime>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 const int SCALE = 10;
 const int WIDTH = 64 * SCALE;
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
   Chip8 chip;
   chip.reset();
   std::cout << "Chip8 Emulator Start\n";
-  chip.loadRom("games/Tetris.ch8");
+  chip.loadRom("games/Pong.ch8");
 
   SDL_Window *window = SDL_CreateWindow(
       "Chip-8 Emulator",
@@ -30,6 +31,9 @@ int main(int argc, char *argv[])
       0);
 
   SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+  Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+  Mix_Chunk *beepSound = Mix_LoadWAV("beep.wav");
 
   bool running = true;
   SDL_Event event;
@@ -71,12 +75,18 @@ int main(int argc, char *argv[])
 
       if (chip.soundTimer > 0)
       {
-        // keep sound alive
+        if (!Mix_Playing(-1))
+        {
+          Mix_PlayChannel(-1, beepSound, -1);
+        }
         chip.soundTimer--;
       }
       else
       {
-        // cancel sound
+        if (Mix_Playing(-1))
+        {
+          Mix_HaltChannel(-1);
+        }
       }
 
       lastTimerUpdate = currentTime;
@@ -108,6 +118,9 @@ int main(int argc, char *argv[])
     SDL_RenderPresent(renderer);
     SDL_Delay(16);
   }
+
+  Mix_FreeChunk(beepSound);
+  Mix_CloseAudio();
 
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
