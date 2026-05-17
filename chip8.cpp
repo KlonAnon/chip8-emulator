@@ -78,6 +78,7 @@ void Chip8::cycle()
         case 0x00E0:
             for (int i = 0; i < 64 * 32; i++)
                 display[i] = false;
+            draw_exec = true;
             break;
         case 0x00EE:
             pc = stack[sp];
@@ -118,16 +119,16 @@ void Chip8::cycle()
             V[x] = V[y];
             break;
         case 0x1:
-            V[0xF] = 0;
             V[x] |= V[y];
+            V[0xF] = 0;
             break;
         case 0x2:
-            V[0xF] = 0;
             V[x] &= V[y];
+            V[0xF] = 0;
             break;
         case 0x3:
-            V[0xF] = 0;
             V[x] ^= V[y];
+            V[0xF] = 0;
             break;
         case 0x4:
         {
@@ -212,6 +213,7 @@ void Chip8::cycle()
                 }
             }
         }
+        draw_exec = true;
         break;
     }
     case 0xE000:

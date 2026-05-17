@@ -18,6 +18,9 @@ struct Chip8
     bool waitingForKeyRelease = false;
     uint8_t waitingKey = 0;
 
+    // Needed to check if last executed opcode was a draw instruction
+    bool draw_exec;
+
     const uint8_t FONT_START = 0x0000;
     const uint8_t FONTSET[80] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0

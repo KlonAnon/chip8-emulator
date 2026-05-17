@@ -10,7 +10,6 @@ const int HEIGHT = 32 * SCALE;
 
 const int TIMER_FREQ = 60;
 const int TIMER_INTERVAL = 1000 / TIMER_FREQ;
-const int CYCLES_PER_FRAME = 10;
 
 void mapKey(Chip8 &chip, SDL_Keycode keycode, bool keydown);
 
@@ -20,7 +19,7 @@ int main(int argc, char *argv[])
   Chip8 chip;
   chip.reset();
   std::cout << "Chip8 Emulator Start\n";
-  chip.loadRom("games/6-keypad.ch8");
+  chip.loadRom("games/Pong.ch8");
 
   SDL_Window *window = SDL_CreateWindow(
       "Chip-8 Emulator",
@@ -60,10 +59,7 @@ int main(int argc, char *argv[])
         mapKey(chip, event.key.keysym.sym, false);
     }
 
-    for (int i = 0; i < CYCLES_PER_FRAME; i++)
-    {
-      chip.cycle();
-    }
+    chip.cycle();
 
     Uint32 currentTime = SDL_GetTicks();
     if (currentTime - lastTimerUpdate >= TIMER_INTERVAL)
@@ -92,31 +88,35 @@ int main(int argc, char *argv[])
       lastTimerUpdate = currentTime;
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    for (int y = 0; y < 32; y++)
+    if (chip.draw_exec)
     {
-      for (int x = 0; x < 64; x++)
+      SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+      SDL_RenderClear(renderer);
+
+      SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+      for (int y = 0; y < 32; y++)
       {
-        int index = y * 64 + x;
-
-        if (chip.display[index])
+        for (int x = 0; x < 64; x++)
         {
-          SDL_Rect rect;
-          rect.x = x * SCALE;
-          rect.y = y * SCALE;
-          rect.w = SCALE;
-          rect.h = SCALE;
+          int index = y * 64 + x;
 
-          SDL_RenderFillRect(renderer, &rect);
+          if (chip.display[index])
+          {
+            SDL_Rect rect;
+            rect.x = x * SCALE;
+            rect.y = y * SCALE;
+            rect.w = SCALE;
+            rect.h = SCALE;
+
+            SDL_RenderFillRect(renderer, &rect);
+          }
         }
       }
-    }
 
-    SDL_RenderPresent(renderer);
-    SDL_Delay(16);
+      SDL_RenderPresent(renderer);
+      SDL_Delay(16);
+      chip.draw_exec = false;
+    }
   }
 
   Mix_FreeChunk(beepSound);
