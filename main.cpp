@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
   Chip8 chip;
   chip.reset();
   std::cout << "Chip8 Emulator Start\n";
-  chip.loadRom("games/Pong.ch8");
+  chip.loadRom("games/6-keypad.ch8");
 
   SDL_Window *window = SDL_CreateWindow(
       "Chip-8 Emulator",

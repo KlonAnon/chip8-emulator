@@ -9,6 +9,8 @@ void Chip8::reset()
     sp = 0;
     delayTimer = 0;
     soundTimer = 0;
+    waitingForKeyRelease = false;
+    waitingKey = 0;
 
     for (int i = 0; i < 4096; i++)
         memory[i] = 0;
@@ -116,34 +118,54 @@ void Chip8::cycle()
             V[x] = V[y];
             break;
         case 0x1:
+            V[0xF] = 0;
             V[x] |= V[y];
             break;
         case 0x2:
+            V[0xF] = 0;
             V[x] &= V[y];
             break;
         case 0x3:
+            V[0xF] = 0;
             V[x] ^= V[y];
             break;
         case 0x4:
-            V[0xF] = (V[y] > 0xFF - V[x]) ? 1 : 0;
+        {
+            uint8_t carry = (V[y] > 0xFF - V[x]) ? 1 : 0;
             V[x] += V[y];
+            V[0xF] = carry;
             break;
+        }
         case 0x5:
-            V[0xF] = (V[x] > V[y]) ? 1 : 0;
+        {
+            uint8_t not_borrow = (V[x] >= V[y]) ? 1 : 0;
             V[x] -= V[y];
+            V[0xF] = not_borrow;
             break;
+        }
         case 0x6:
-            V[0xF] = V[x] & 0x1;
+        {
+            V[x] = V[y];
+            uint8_t lsb = V[x] & 0x1;
             V[x] >>= 1;
+            V[0xF] = lsb;
             break;
+        }
         case 0x7:
-            V[0xF] = (V[y] > V[x]) ? 1 : 0;
+        {
+            uint8_t not_borrow = (V[y] >= V[x]) ? 1 : 0;
             V[x] = V[y] - V[x];
+            V[0xF] = not_borrow;
             break;
+        }
         case 0xE:
-            V[0xF] = V[x] & 0x80;
+        {
+            V[x] = V[y];
+            uint8_t msb = ((V[x] & 0x80) > 0) ? 1 : 0;
             V[x] <<= 1;
+            V[0xF] = msb;
             break;
+        }
         }
         break;
     case 0x9000:
@@ -165,20 +187,24 @@ void Chip8::cycle()
     case 0xD000:
     {
         uint8_t n = opcode & 0x000F;
+        uint8_t startX = V[x] % 64;
+        uint8_t startY = V[y] % 32;
         V[0xF] = 0;
         for (int row = 0; row < n; row++)
         {
+            int yPos = startY + row;
+            if (yPos >= 32)
+                break;
             uint8_t spriteByte = memory[I + row];
             for (int bit = 0; bit < 8; bit++)
             {
-                uint8_t mask = 0x80 >> bit;
+                int xPos = startX + bit;
+                if (xPos >= 64)
+                    break;
 
-                if (spriteByte & mask)
+                if (spriteByte & (0x80 >> bit))
                 {
-                    int xPos = (V[x] + bit) % 64;
-                    int yPos = (V[y] + row) % 32;
                     int index = yPos * 64 + xPos;
-
                     if (display[index])
                         V[0xF] = 1;
 
@@ -209,18 +235,31 @@ void Chip8::cycle()
             break;
         case 0x0A:
         {
-            bool keyPressed = false;
-            for (int k = 0; k < 16; k++)
+            if (!waitingForKeyRelease)
             {
-                if (keys[k])
+                for (int k = 0; k < 16; k++)
                 {
-                    V[x] = k;
-                    keyPressed = true;
-                    break;
+                    if (keys[k])
+                    {
+                        waitingKey = static_cast<uint8_t>(k);
+                        waitingForKeyRelease = true;
+                        break;
+                    }
+                }
+                pc -= 2;
+            }
+            else
+            {
+                if (keys[waitingKey])
+                {
+                    pc -= 2;
+                }
+                else
+                {
+                    V[x] = waitingKey;
+                    waitingForKeyRelease = false;
                 }
             }
-            if (!keyPressed)
-                pc -= 2;
             break;
         }
         case 0x15:
@@ -248,12 +287,14 @@ void Chip8::cycle()
             {
                 memory[I + i] = V[i];
             }
+            I += x + 1;
             break;
         case 0x65:
             for (int i = 0; i <= x; i++)
             {
                 V[i] = memory[I + i];
             }
+            I += x + 1;
             break;
         }
     }

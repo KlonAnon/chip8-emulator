@@ -14,6 +14,10 @@ struct Chip8
     bool display[64 * 32];
     bool keys[16];
 
+    // Variables needed to track key status for Fx0A instruction
+    bool waitingForKeyRelease = false;
+    uint8_t waitingKey = 0;
+
     const uint8_t FONT_START = 0x0000;
     const uint8_t FONTSET[80] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
